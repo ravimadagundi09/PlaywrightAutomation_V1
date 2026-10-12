@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Chai Local - Enterprise Operations Terminal</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+.scrollbar-thin::-webkit-scrollbar {
+
+height: 6px;
+
+width: 6px;
+
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+
+background: transparent;
+
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+
+background: #4b5563;
+
+border-radius: 3px;
+
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+
+background: #f59e0b;
+
+}
+
+</style>
+
+</head>
+
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen pb-12">
+
+
+
+<nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 sticky top-0 z-50 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg">
+
+<div class="flex items-center space-x-3">
+
+<div class="bg-amber-500 text-gray-900 p-2 rounded-xl font-bold text-xl">☕</div>
+
+<div>
+
+<h1 class="text-xl font-bold tracking-wider text-amber-400">CHAI LOCAL</h1>
+
+<p class="text-xs text-gray-400">Enterprise Sales Engine & Dynamic Query Ledger</p>
+
+</div>
+
+</div>
+
+<div class="flex flex-wrap gap-2 justify-center sm:justify-end">
+
+<button onclick="copyDataToClipboard()" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs px-3 py-1.5 rounded-lg font-semibold border border-amber-500/30 transition cursor-pointer">
+
+📋 Copy Ledger Text
+
+</button>
+
+<button onclick="exportDataToCSV()" class="bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1.5 rounded-lg font-semibold border border-gray-600 transition cursor-pointer">
+
+📥 Download CSV
+
+</button>
+
+<button onclick="exportBackupJSON()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs px-3 py-1.5 rounded-lg font-semibold border border-emerald-500/30 transition cursor-pointer">
+
+🔒 Backup JSON
+
+</button>
+
+<label class="bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1.5 rounded-lg font-semibold border border-gray-600 transition cursor-pointer flex items-center">
+
+📤 Restore JSON
+
+<input type="file" id="importJSONFile" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+
+</label>
+
+</div>
+
+</nav>
+
+
+
+<main class="p-4 sm:p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+
+
+<div class="space-y-6 lg:col-span-1">
+
+<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl">
+
+<h2 class="text-md font-bold text-amber-400 mb-4 uppercase tracking-wider flex items-center">
+
+<span class="mr-2 text-lg">➕</span> Log Sales Entry
+
+</h2>
+
+<form id="liveRegisterForm" class="space-y-4">
+
+<div>
+
+<label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Select Date</label>
+
+<input type="date" id="inputDate" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500 font-mono">
+
+</div>
+
+
+
+<div class="grid grid-cols-2 gap-4">
+
+<div>
+
+<label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Cash Sales (₹)</label>
+
+<input type="number" id="inputCash" placeholder="0" min="0" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500 font-mono text-lg">
+
+</div>
+
+<div>
+
+<label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Online Sales (₹)</label>
+
+<input type="number" id="inputOnline" placeholder="0" min="0" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500 font-mono text-lg">
+
+</div>
+
+</div>
+
+
+
+<button type="submit" class="w-full mt-2 bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold py-3 rounded-xl transition shadow-lg hover:shadow-amber-500/10 cursor-pointer text-sm uppercase tracking-wider">
+
+Commit To Database
+
+</button>
+
+</form>
+
+</div>
+
+
+
+<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl space-y-4">
+
+<div class="flex justify-between items-center">
+
+<h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">🎯 Performance Target</h3>
+
+<div class="flex items-center gap-1 font-mono text-xs">
+
+<span class="text-gray-400">₹</span>
+
+<input type="number" id="targetGoalInput" value="400000" oninput="calculateMilestoneProgress()" class="w-20 bg-gray-900 text-white font-bold border border-gray-700 rounded px-1.5 py-0.5 focus:outline-none focus:border-amber-500 text-right">
+
+</div>
+
+</div>
+
+<div class="space-y-2">
+
+<div class="flex justify-between text-xs font-mono">
+
+<span class="text-gray-400" id="targetMonthLabel">Current Cycle</span>
+
+<span class="text-amber-400 font-bold" id="targetPercentLabel">0%</span>
+
+</div>
+
+<div class="w-full bg-gray-900 rounded-full h-3 border border-gray-700 overflow-hidden">
+
+<div id="targetProgressBar" class="bg-gradient-to-r from-amber-500 to-emerald-400 h-full w-0 transition-all duration-500"></div>
+
+</div>
+
+<p class="text-[10px] text-gray-400 text-right font-mono" id="targetRemainingLabel">Calculating gaps...</p>
+
+</div>
+
+</div>
+
+
+
+<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl space-y-4">
+
+<h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">⚡ Strategic Metrics</h3>
+
+<div class="space-y-3 font-mono text-xs">
+
+<div class="bg-gray-900/50 p-3 rounded-xl border border-gray-700">
+
+<p class="text-gray-400 font-sans uppercase font-semibold text-[10px] tracking-wide">🏆 Best Day Peak Trend</p>
+
+<p id="insightBestDay" class="text-emerald-400 font-bold text-sm mt-0.5">Calculating...</p>
+
+</div>
+
+<div class="bg-gray-900/50 p-3 rounded-xl border border-gray-700">
+
+<p class="text-gray-400 font-sans uppercase font-semibold text-[10px] tracking-wide">🚀 Highest Single-Day Volume</p>
+
+<p id="insightPeakSale" class="text-white font-bold text-sm mt-0.5">Calculating...</p>
+
+</div>
+
+<div class="bg-gray-900/50 p-3 rounded-xl border border-gray-700">
+
+<p class="text-gray-400 font-sans uppercase font-semibold text-[10px] tracking-wide">📉 Lowest Active Baseline</p>
+
+<p id="insightLowestSale" class="text-red-400 font-bold text-sm mt-0.5">Calculating...</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="lg:col-span-2 space-y-6">
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+<div class="bg-gray-800 border border-gray-700 p-5 rounded-2xl shadow-xl">
+
+<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gross Revenue Volume (Filtered)</p>
+
+<p id="kpiGrossTotal" class="text-3xl font-bold font-mono text-white mt-1">₹0</p>
+
+</div>
+
+<div class="bg-gray-800 border border-gray-700 p-5 rounded-2xl shadow-xl">
+
+<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Daily Running Average</p>
+
+<p id="kpiDailyAverage" class="text-3xl font-bold font-mono text-emerald-400 mt-1">₹0</p>
+
+</div>
+
+</div>
+
+
+
+<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl">
+
+<div class="flex justify-between items-center mb-3">
+
+<h2 class="text-md font-bold text-amber-400 uppercase tracking-wider flex items-center">
+
+<span class="mr-2">📅</span> Timeline Monthly Breakdown
+
+</h2>
+
+<span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider font-mono">Swipe / Scroll Layout ⇄</span>
+
+</div>
+
+<div class="overflow-x-auto pb-3 flex gap-4 scrollbar-thin snap-x" id="monthlyInsightsContainer">
+
+</div>
+
+</div>
+
+
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl md:col-span-2">
+
+<h2 class="text-md font-bold text-amber-400 mb-4 uppercase tracking-wider flex items-center">
+
+<span class="mr-2">📈</span> Continuous Revenue Curve
+
+</h2>
+
+<div class="relative h-64 w-full">
+
+<canvas id="growthChartEngine"></canvas>
+
+</div>
+
+</div>
+
+
+
+<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl md:col-span-1">
+
+<h2 class="text-md font-bold text-amber-400 mb-4 uppercase tracking-wider flex items-center">
+
+<span class="mr-2">📊</span> Weekly Split
+
+</h2>
+
+<div class="relative h-64 w-full">
+
+<canvas id="weekdayChartEngine"></canvas>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="bg-gray-800 rounded-2xl border border-gray-700 shadow-2xl overflow-hidden">
+
+<div class="p-4 sm:p-6 border-b border-gray-700 bg-gray-800/50 space-y-4">
+
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+
+<h3 class="font-bold text-sm uppercase tracking-wider text-gray-300">Permanent Ledger Matrix</h3>
+
+<span class="text-xs bg-gray-900 text-gray-400 px-2.5 py-1 rounded-md font-mono border border-gray-700" id="totalEntriesCounter">0 Logs Saved</span>
+
+</div>
+
+
+
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
+
+<div class="sm:col-span-1 flex gap-2">
+
+<button onclick="toggleActiveSorting('date')" id="sortBtnDate" class="flex-1 bg-amber-500 border border-amber-500 text-gray-950 text-xs py-2 px-2 rounded-xl transition font-bold flex justify-center items-center gap-1 cursor-pointer">
+
+Date <span>▼</span>
+
+</button>
+
+<button onclick="toggleActiveSorting('gross')" id="sortBtnGross" class="flex-1 bg-gray-900 border border-gray-700 hover:border-amber-500/50 text-gray-300 text-xs py-2 px-2 rounded-xl transition font-medium flex justify-center items-center gap-1 cursor-pointer">
+
+Gross <span>─</span>
+
+</button>
+
+</div>
+
+<div class="sm:col-span-1">
+
+<select id="temporalRangeSelector" onchange="handleTemporalRangeChange()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 cursor-pointer font-sans">
+
+<option value="all">All Time History</option>
+
+<option value="today">Today</option>
+
+<option value="7days">Last 7 Days</option>
+
+<option value="thismonth">This Month</option>
+
+<option value="lastmonth">Last Month</option>
+
+<option value="custom">Custom Date Range...</option>
+
+</select>
+
+</div>
+
+<div class="sm:col-span-2 relative">
+
+<input type="text" id="ledgerSearchBar" oninput="executeLedgerSearchQuery()" placeholder="Search data by numbers, characters or terms..." class="w-full bg-gray-900 border border-gray-700 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 font-mono">
+
+<span class="absolute left-3.5 top-2.5 text-gray-500 text-xs">🔍</span>
+
+</div>
+
+</div>
+
+
+
+<div id="customDateRangeFields" class="hidden grid grid-cols-2 gap-4 pt-2 border-t border-gray-700/50 animate-fadeIn">
+
+<div>
+
+<label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Start Bound Date</label>
+
+<input type="date" id="customRangeStart" onchange="executeLedgerSearchQuery()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono">
+
+</div>
+
+<div>
+
+<label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">End Bound Date</label>
+
+<input type="date" id="customRangeEnd" onchange="executeLedgerSearchQuery()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-mono">
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="overflow-x-auto max-h-96 scrollbar-thin">
+
+<table class="w-full text-left border-collapse">
+
+<thead>
+
+<tr class="bg-gray-900/60 text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-700 sticky top-0 z-10">
+
+<th class="p-4">Date Log</th>
+
+<th class="p-4">Cash Sales</th>
+
+<th class="p-4">Online Sales</th>
+
+<th class="p-4">Total Daily Gross</th>
+
+<th class="p-4 text-center">Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="liveLedgerRows" class="divide-y divide-gray-700 font-mono text-sm text-gray-300">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</main>
+
+
+
+<script>
+
+let dbInstance = null;
+
+let activeChart = null;
+
+let activeWeekdayChart = null;
+
+let masterRuntimeCachedRecords = [];
+
+let currentlyFilteredRecords = [];
+
+
+
+let sortingConfiguration = { field: 'date', direction: 'desc' };
+
+
+
+const DB_NAME = "ChaiLocalDatabase_Enterprise_v7";
+
+const STORE_NAME = "daily_turnover_ledger";
+
+
+
+// Open Client Database Instantiation
+
+const request = indexedDB.open(DB_NAME, 1);
+
+
+
+request.onupgradeneeded = function(e) {
+
+let db = e.target.result;
+
+if (!db.objectStoreNames.contains(STORE_NAME)) {
+
+db.createObjectStore(STORE_NAME, { keyPath: "date" });
+
+}
+
+};
+
+
+
+request.onsuccess = function(e) {
+
+dbInstance = e.target.result;
+
+verifyAndSeedDefaultMetrics();
+
+};
+
+
+
+function verifyAndSeedDefaultMetrics() {
+
+const tx = dbInstance.transaction(STORE_NAME, "readonly");
+
+const store = tx.objectStore(STORE_NAME);
+
+const countReq = store.count();
+
+
+
+countReq.onsuccess = function() {
+
+if (countReq.result === 0) {
+
+const baselineData = [
+
+// MARCH DAILY LOG ENTRIES
+
+{ date: '2026-03-05', cash: 4440, online: 1657 },
+
+{ date: '2026-03-07', cash: 5050, online: 933 },
+
+{ date: '2026-03-08', cash: 6000, online: 1150 },
+
+{ date: '2026-03-09', cash: 3500, online: 750 },
+
+{ date: '2026-03-10', cash: 4000, online: 1359 },
+
+{ date: '2026-03-11', cash: 4000, online: 765 },
+
+{ date: '2026-03-12', cash: 4000, online: 715 },
+
+{ date: '2026-03-13', cash: 3500, online: 835 },
+
+{ date: '2026-03-14', cash: 4500, online: 1178 },
+
+{ date: '2026-03-15', cash: 4000, online: 1330 },
+
+{ date: '2026-03-16', cash: 3500, online: 610 },
+
+{ date: '2026-03-17', cash: 3500, online: 690 },
+
+{ date: '2026-03-18', cash: 4400, online: 1180 },
+
+{ date: '2026-03-19', cash: 4000, online: 1550 },
+
+{ date: '2026-03-20', cash: 7000, online: 1125 },
+
+{ date: '2026-03-21', cash: 7500, online: 2645 },
+
+{ date: '2026-03-22', cash: 7600, online: 1820 },
+
+{ date: '2026-03-23', cash: 9300, online: 1150 },
+
+{ date: '2026-03-24', cash: 7500, online: 1960 },
+
+{ date: '2026-03-25', cash: 8000, online: 1065 },
+
+{ date: '2026-03-26', cash: 8000, online: 1359 },
+
+{ date: '2026-03-27', cash: 6500, online: 2405 },
+
+{ date: '2026-03-28', cash: 7800, online: 1785 },
+
+{ date: '2026-03-29', cash: 8000, online: 3215 },
+
+{ date: '2026-03-30', cash: 9000, online: 2330 },
+
+{ date: '2026-03-31', cash: 8400, online: 1335 },
+
+
+
+// APRIL DAILY LOG ENTRIES
+
+{ date: '2026-04-01', cash: 9000, online: 1740 },
+
+{ date: '2026-04-02', cash: 8500, online: 999 },
+
+{ date: '2026-04-03', cash: 10000, online: 1575 },
+
+{ date: '2026-04-04', cash: 9800, online: 1640 },
+
+{ date: '2026-04-05', cash: 6600, online: 3615 },
+
+{ date: '2026-04-06', cash: 12000, online: 1548 },
+
+{ date: '2026-04-07', cash: 10000, online: 2475 },
+
+{ date: '2026-04-08', cash: 10000, online: 2215 },
+
+{ date: '2026-04-09', cash: 11500, online: 880 },
+
+{ date: '2026-04-10', cash: 9000, online: 1755 },
+
+{ date: '2026-04-11', cash: 6700, online: 1055 },
+
+{ date: '2026-04-12', cash: 5500, online: 2765 },
+
+{ date: '2026-04-13', cash: 7350, online: 1460 },
+
+{ date: '2026-04-14', cash: 7830, online: 1025 },
+
+{ date: '2026-04-15', cash: 8415, online: 1245 },
+
+{ date: '2026-04-16', cash: 8460, online: 1730 },
+
+{ date: '2026-04-17', cash: 5650, online: 1900 },
+
+{ date: '2026-04-18', cash: 7390, online: 1140 },
+
+{ date: '2026-04-19', cash: 7545, online: 2690 },
+
+{ date: '2026-04-20', cash: 8494, online: 2560 },
+
+{ date: '2026-04-21', cash: 8590, online: 2398 },
+
+{ date: '2026-04-22', cash: 9807, online: 2655 },
+
+{ date: '2026-04-23', cash: 11080, online: 2275 },
+
+{ date: '2026-04-24', cash: 6883, online: 2215 },
+
+{ date: '2026-04-25', cash: 8954, online: 1930 },
+
+{ date: '2026-04-26', cash: 9207, online: 3460 },
+
+{ date: '2026-04-27', cash: 10105, online: 2560 },
+
+{ date: '2026-04-28', cash: 13042, online: 1945 },
+
+{ date: '2026-04-29', cash: 10220, online: 2745 },
+
+{ date: '2026-04-30', cash: 9325, online: 2550 },
+
+
+
+// MAY DAILY LOG ENTRIES
+
+{ date: '2026-05-01', cash: 9799, online: 2615 },
+
+{ date: '2026-05-02', cash: 9220, online: 2035 },
+
+{ date: '2026-05-03', cash: 10904, online: 4356 },
+
+{ date: '2026-05-04', cash: 13406, online: 2715 },
+
+{ date: '2026-05-05', cash: 14257, online: 2895 },
+
+{ date: '2026-05-06', cash: 10869, online: 2765 },
+
+{ date: '2026-05-07', cash: 11138, online: 2840 },
+
+{ date: '2026-05-08', cash: 11244, online: 2585 },
+
+{ date: '2026-05-09', cash: 10500, online: 4250 },
+
+{ date: '2026-05-10', cash: 13616, online: 2100 },
+
+{ date: '2026-05-11', cash: 11405, online: 4725 },
+
+{ date: '2026-05-12', cash: 9611, online: 2850 },
+
+{ date: '2026-05-13', cash: 10572, online: 2365 },
+
+{ date: '2026-05-14', cash: 10968, online: 3305 },
+
+{ date: '2026-05-15', cash: 12810, online: 2785 },
+
+{ date: '2026-05-16', cash: 10329, online: 3922 },
+
+{ date: '2026-05-17', cash: 10893, online: 3675 },
+
+{ date: '2026-05-18', cash: 11582, online: 2575 },
+
+{ date: '2026-05-19', cash: 9475, online: 2890 },
+
+{ date: '2026-05-20', cash: 11687, online: 2276 },
+
+{ date: '2026-05-21', cash: 11965, online: 2580 },
+
+{ date: '2026-05-22', cash: 10532, online: 2345 },
+
+{ date: '2026-05-23', cash: 9772, online: 2730 },
+
+{ date: '2026-05-24', cash: 14102, online: 4400 },
+
+{ date: '2026-05-25', cash: 13478, online: 2955 },
+
+{ date: '2026-05-26', cash: 12230, online: 3635 },
+
+{ date: '2026-05-27', cash: 12926, online: 3225 },
+
+{ date: '2026-05-28', cash: 14345, online: 3615 },
+
+{ date: '2026-05-29', cash: 12672, online: 3525 },
+
+{ date: '2026-05-30', cash: 16807, online: 3830 },
+
+{ date: '2026-05-31', cash: 14180, online: 3565 },
+
+
+
+// JUNE DAILY LOG ENTRIES
+
+{ date: '2026-06-01', cash: 13100, online: 3735 },
+
+{ date: '2026-06-03', cash: 8437, online: 3580 },
+
+{ date: '2026-06-04', cash: 14835, online: 2910 },
+
+{ date: '2026-06-05', cash: 13325, online: 3520 },
+
+{ date: '2026-06-06', cash: 12318, online: 3330 },
+
+{ date: '2026-06-07', cash: 11305, online: 3870 },
+
+{ date: '2026-06-08', cash: 15492, online: 3795 },
+
+{ date: '2026-06-09', cash: 11547, online: 3450 },
+
+{ date: '2026-06-10', cash: 11790, online: 3474 },
+
+{ date: '2026-06-11', cash: 11595, online: 3320 },
+
+{ date: '2026-06-12', cash: 13330, online: 3615 },
+
+{ date: '2026-06-13', cash: 11970, online: 3920 },
+
+{ date: '2026-06-14', cash: 14590, online: 3811 },
+
+{ date: '2026-06-15', cash: 12569, online: 2240 },
+
+{ date: '2026-06-16', cash: 14992, online: 3010 },
+
+{ date: '2026-06-17', cash: 14162, online: 2976 },
+
+{ date: '2026-06-18', cash: 12566, online: 4125 },
+
+{ date: '2026-06-19', cash: 10190, online: 3110 },
+
+{ date: '2026-06-20', cash: 11261, online: 2155 },
+
+{ date: '2026-06-21', cash: 13702, online: 3885 },
+
+{ date: '2026-06-22', cash: 12626, online: 2320 },
+
+{ date: '2026-06-23', cash: 13087, online: 3540 },
+
+{ date: '2026-06-24', cash: 11210, online: 5725 },
+
+{ date: '2026-06-25', cash: 11277, online: 3400 },
+
+{ date: '2026-06-26', cash: 13102, online: 3255 },
+
+{ date: '2026-06-27', cash: 12440, online: 4520 }
+
+];
+
+const writeTx = dbInstance.transaction(STORE_NAME, "readwrite");
+
+const writeStore = writeTx.objectStore(STORE_NAME);
+
+baselineData.forEach(item => writeStore.put(item));
+
+writeTx.oncomplete = () => fetchAndRefreshSystemData();
+
+} else {
+
+fetchAndRefreshSystemData();
+
+}
+
+};
+
+}
+
+
+
+document.getElementById('liveRegisterForm').addEventListener('submit', function(e) {
+
+e.preventDefault();
+
+const date = document.getElementById('inputDate').value;
+
+const cash = parseFloat(document.getElementById('inputCash').value) || 0;
+
+const online = parseFloat(document.getElementById('inputOnline').value) || 0;
+
+
+
+const tx = dbInstance.transaction(STORE_NAME, "readwrite");
+
+tx.objectStore(STORE_NAME).put({ date, cash, online });
+
+
+
+tx.oncomplete = function() {
+
+fetchAndRefreshSystemData();
+
+document.getElementById('liveRegisterForm').reset();
+
+};
+
+});
+
+
+
+function deleteEntryLog(dateKey) {
+
+if (confirm(`Erase permanent database record for ${dateKey}?`)) {
+
+const tx = dbInstance.transaction(STORE_NAME, "readwrite");
+
+tx.objectStore(STORE_NAME).delete(dateKey);
+
+tx.oncomplete = () => fetchAndRefreshSystemData();
+
+}
+
+}
+
+
+
+function fetchAndRefreshSystemData() {
+
+const tx = dbInstance.transaction(STORE_NAME, "readonly");
+
+tx.objectStore(STORE_NAME).getAll().onsuccess = function(e) {
+
+masterRuntimeCachedRecords = e.target.result;
+
+processGlobalAnalyticsAndRenders();
+
+};
+
+}
+
+
+
+function handleTemporalRangeChange() {
+
+const mode = document.getElementById('temporalRangeSelector').value;
+
+const customFields = document.getElementById('customDateRangeFields');
+
+if (mode === 'custom') {
+
+customFields.classList.remove('hidden');
+
+} else {
+
+customFields.classList.add('hidden');
+
+}
+
+executeLedgerSearchQuery();
+
+}
+
+
+
+function processGlobalAnalyticsAndRenders() {
+
+let chronologicalRecords = [...masterRuntimeCachedRecords].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+
+
+let absolutePeak = { val: 0, date: 'N/A' };
+
+let absoluteLowest = { val: Infinity, date: 'N/A' };
+
+const weekdayAggregation = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+
+const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+const advancedMonthlyMap = {};
+
+
+
+// Global analytics calculation over ALL records
+
+chronologicalRecords.forEach(item => {
+
+const dayGross = item.cash + item.online;
+
+if (dayGross > absolutePeak.val) { absolutePeak.val = dayGross; absolutePeak.date = item.date; }
+
+if (dayGross < absoluteLowest.val && dayGross > 0) { absoluteLowest.val = dayGross; absoluteLowest.date = item.date; }
+
+
+
+const dateObj = new Date(item.date);
+
+weekdayAggregation[dateObj.getDay()].push(dayGross);
+
+
+
+const strMonthName = dateObj.toLocaleString('default', { month: 'short' });
+
+const strYearName = dateObj.getFullYear();
+
+const bucketIdentifier = `${strMonthName} ${strYearName}`;
+
+const keySortingIndex = dateObj.getFullYear() * 100 + dateObj.getMonth();
+
+
+
+if (!advancedMonthlyMap[bucketIdentifier]) {
+
+advancedMonthlyMap[bucketIdentifier] = { total: 0, count: 0, sortingIndex: keySortingIndex };
+
+}
+
+advancedMonthlyMap[bucketIdentifier].total += dayGross;
+
+advancedMonthlyMap[bucketIdentifier].count++;
+
+});
+
+
+
+// Dynamic Timeline Cards render
+
+const monthlyContainer = document.getElementById('monthlyInsightsContainer');
+
+monthlyContainer.innerHTML = '';
+
+const sortedMonthBuckets = Object.keys(advancedMonthlyMap).sort((a,b) => advancedMonthlyMap[a].sortingIndex - advancedMonthlyMap[b].sortingIndex);
+
+
+
+sortedMonthBuckets.forEach(mKey => {
+
+const b = advancedMonthlyMap[mKey];
+
+const avg = (b.total / b.count).toFixed(0);
+
+const card = document.createElement('div');
+
+card.className = "bg-gray-900 border border-gray-700 p-4 rounded-xl text-center min-w-[135px] flex-shrink-0 snap-start shadow-inner";
+
+card.innerHTML = `
+
+<p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${mKey}</p>
+
+<p class="text-sm font-bold text-amber-400 mt-1 font-mono">₹${b.total.toLocaleString()}</p>
+
+<p class="text-[9px] text-gray-500 mt-0.5 font-sans">Avg: ₹${parseInt(avg).toLocaleString()}/d</p>
+
+`;
+
+monthlyContainer.appendChild(card);
+
+});
+
+
+
+// Best operational day of week tracker logic
+
+let optimalDayName = "Evaluating...";
+
+let highestDayAvg = 0;
+
+const weekdayChartAverages = [];
+
+
+
+for(let i=0; i<7; i++) {
+
+const entries = weekdayAggregation[i];
+
+const avg = entries.length > 0 ? entries.reduce((acc, v) => acc + v, 0) / entries.length : 0;
+
+weekdayChartAverages.push(Math.round(avg));
+
+if (avg > highestDayAvg) { highestDayAvg = avg; optimalDayName = weekdayNames[i]; }
+
+}
+
+
+
+document.getElementById('insightBestDay').innerText = `${optimalDayName}s (Avg: ₹${highestDayAvg.toFixed(0)})`;
+
+document.getElementById('insightPeakSale').innerText = `₹${absolutePeak.val.toLocaleString()} (${absolutePeak.date})`;
+
+document.getElementById('insightLowestSale').innerText = absoluteLowest.val === Infinity ? "N/A" : `₹${absoluteLowest.val.toLocaleString()} (${absoluteLowest.date})`;
+
+
+
+// Draw Weekday distribution multi-state visualization graph
+
+renderWeekdayDistributionChart(weekdayChartAverages);
+
+
+
+// Trigger Search, Range Filters, & Table Generation
+
+executeLedgerSearchQuery();
+
+}
+
+
+
+function toggleActiveSorting(targetField) {
+
+if (sortingConfiguration.field === targetField) {
+
+sortingConfiguration.direction = sortingConfiguration.direction === 'asc' ? 'desc' : 'asc';
+
+} else {
+
+sortingConfiguration.field = targetField;
+
+sortingConfiguration.direction = 'desc';
+
+}
+
+updateSortingUIButtons();
+
+executeLedgerSearchQuery();
+
+}
+
+
+
+function updateSortingUIButtons() {
+
+const dateBtn = document.getElementById('sortBtnDate');
+
+const grossBtn = document.getElementById('sortBtnGross');
+
+
+
+if (sortingConfiguration.field === 'date') {
+
+dateBtn.className = "flex-1 bg-amber-500 border border-amber-500 text-gray-950 text-xs py-2 px-2 rounded-xl transition font-bold flex justify-center items-center gap-1.5 cursor-pointer";
+
+dateBtn.querySelector('span').innerText = sortingConfiguration.direction === 'asc' ? '▲' : '▼';
+
+grossBtn.className = "flex-1 bg-gray-900 border border-gray-700 hover:border-amber-500/50 text-gray-300 text-xs py-2 px-2 rounded-xl transition font-medium flex justify-center items-center gap-1.5 cursor-pointer";
+
+grossBtn.querySelector('span').innerText = '─';
+
+} else {
+
+grossBtn.className = "flex-1 bg-amber-500 border border-amber-500 text-gray-950 text-xs py-2 px-2 rounded-xl transition font-bold flex justify-center items-center gap-1.5 cursor-pointer";
+
+grossBtn.querySelector('span').innerText = sortingConfiguration.direction === 'asc' ? '▲' : '▼';
+
+dateBtn.className = "flex-1 bg-gray-900 border border-gray-700 hover:border-amber-500/50 text-gray-300 text-xs py-2 px-2 rounded-xl transition font-medium flex justify-center items-center gap-1.5 cursor-pointer";
+
+dateBtn.querySelector('span').innerText = '─';
+
+}
+
+}
+
+
+
+function executeLedgerSearchQuery() {
+
+const mode = document.getElementById('temporalRangeSelector').value;
+
+const queryText = document.getElementById('ledgerSearchBar').value.toLowerCase().trim();
+
+let records = [...masterRuntimeCachedRecords];
+
+
+
+// 1. Apply Temporal Range Filtering
+
+const parseDateStr = (dStr) => new Date(dStr + "T00:00:00");
+
+const structuralToday = new Date("2026-06-29T00:00:00"); // Standard current pipeline baseline anchor
+
+
+
+if (mode === 'today') {
+
+const targetStr = "2026-06-29";
+
+records = records.filter(item => item.date === targetStr);
+
+} else if (mode === '7days') {
+
+const boundDate = new Date(structuralToday);
+
+boundDate.setDate(boundDate.getDate() - 7);
+
+records = records.filter(item => parseDateStr(item.date) >= boundDate && parseDateStr(item.date) <= structuralToday);
+
+} else if (mode === 'thismonth') {
+
+records = records.filter(item => item.date.startsWith("2026-06"));
+
+} else if (mode === 'lastmonth') {
+
+records = records.filter(item => item.date.startsWith("2026-05"));
+
+} else if (mode === 'custom') {
+
+const startVal = document.getElementById('customRangeStart').value;
+
+const endVal = document.getElementById('customRangeEnd').value;
+
+if (startVal) records = records.filter(item => item.date >= startVal);
+
+if (endVal) records = records.filter(item => item.date <= endVal);
+
+}
+
+
+
+// 2. Substring Sub-Query Matching Logic
+
+if (queryText.length > 0) {
+
+records = records.filter(item => {
+
+const dailyTotal = (item.cash + item.online).toString();
+
+return item.date.toLowerCase().includes(queryText) ||
+
+item.cash.toString().includes(queryText) ||
+
+item.online.toString().includes(queryText) ||
+
+dailyTotal.includes(queryText);
+
+});
+
+}
+
+
+
+currentlyFilteredRecords = records;
+
+
+
+// 3. Execution Sort Algorithm Pipeline
+
+currentlyFilteredRecords.sort((a, b) => {
+
+if (sortingConfiguration.field === 'date') {
+
+return sortingConfiguration.direction === 'asc'
+
+? new Date(a.date) - new Date(b.date)
+
+: new Date(b.date) - new Date(a.date);
+
+} else {
+
+const totalA = a.cash + a.online;
+
+const totalB = b.cash + b.online;
+
+return sortingConfiguration.direction === 'asc' ? totalA - totalB : totalB - totalA;
+
+}
+
+});
+
+
+
+// 4. Compute Contextual Metrics & Update Dom Strings
+
+let aggregateSales = 0;
+
+const chartLabels = [];
+
+const chartDataValues = [];
+
+
+
+// Generate temporary chronological sets specifically tailored for current filtered range
+
+let chronologicallyOrderedFiltered = [...currentlyFilteredRecords].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+chronologicallyOrderedFiltered.forEach(item => {
+
+const dayGross = item.cash + item.online;
+
+aggregateSales += dayGross;
+
+chartLabels.push(item.date);
+
+chartDataValues.push(dayGross);
+
+});
+
+
+
+const currentAverage = currentlyFilteredRecords.length > 0 ? (aggregateSales / currentlyFilteredRecords.length).toFixed(0) : 0;
+
+document.getElementById('kpiGrossTotal').innerText = `₹${aggregateSales.toLocaleString()}`;
+
+document.getElementById('kpiDailyAverage').innerText = `₹${parseInt(currentAverage).toLocaleString()}`;
+
+
+
+// Paint Continuous Curve Line Graph
+
+renderChartGraphics(chartLabels, chartDataValues);
+
+
+
+// Recompute monthly progress targets indicators
+
+calculateMilestoneProgress();
+
+
+
+// Populate Main Output Table Array Row Matrix Map
+
+const tableBody = document.getElementById('liveLedgerRows');
+
+document.getElementById('totalEntriesCounter').innerText = `${currentlyFilteredRecords.length} Matched / Range Logs`;
+
+tableBody.innerHTML = '';
+
+
+
+currentlyFilteredRecords.forEach(item => {
+
+const dayGross = item.cash + item.online;
+
+const tr = document.createElement('tr');
+
+tr.className = "hover:bg-gray-750 transition-colors border-b border-gray-700/50";
+
+tr.innerHTML = `
+
+<td class="p-4 font-sans text-gray-400">${item.date}</td>
+
+<td class="p-4 text-gray-200">₹${item.cash.toLocaleString()}</td>
+
+<td class="p-4 text-gray-200">₹${item.online.toLocaleString()}</td>
+
+<td class="p-4 font-bold text-amber-400">₹${dayGross.toLocaleString()}</td>
+
+<td class="p-4 text-center">
+
+<button onclick="deleteEntryLog('${item.date}')" class="text-red-500 hover:text-red-400 hover:underline transition font-sans text-xs cursor-pointer">Delete</button>
+
+</td>
+
+`;
+
+tableBody.appendChild(tr);
+
+});
+
+}
+
+
+
+function calculateMilestoneProgress() {
+
+const targetVal = parseFloat(document.getElementById('targetGoalInput').value) || 0;
+
+
+
+// Isolate metrics current calendar month total dynamically
+
+const structuralCurrentMonthKey = "2026-06";
+
+document.getElementById('targetMonthLabel').innerText = "June 2026 Target";
+
+
+
+const currentMonthTotal = masterRuntimeCachedRecords
+
+.filter(item => item.date.startsWith(structuralCurrentMonthKey))
+
+.reduce((acc, curr) => acc + (curr.cash + curr.online), 0);
+
+
+
+const percentage = targetVal > 0 ? Math.min(Math.round((currentMonthTotal / targetVal) * 100), 100) : 0;
+
+
+
+document.getElementById('targetPercentLabel').innerText = `${percentage}%`;
+
+document.getElementById('targetProgressBar').style.width = `${percentage}%`;
+
+
+
+if (currentMonthTotal >= targetVal) {
+
+document.getElementById('targetRemainingLabel').innerText = `🎉 Milestone Achieved! Surplus: ₹${(currentMonthTotal - targetVal).toLocaleString()}`;
+
+document.getElementById('targetRemainingLabel').className = "text-[10px] text-emerald-400 font-mono text-right";
+
+} else {
+
+document.getElementById('targetRemainingLabel').innerText = `Current: ₹${currentMonthTotal.toLocaleString()} | Gap: ₹${(targetVal - currentMonthTotal).toLocaleString()}`;
+
+document.getElementById('targetRemainingLabel').className = "text-[10px] text-gray-400 font-mono text-right";
+
+}
+
+}
+
+
+
+function renderChartGraphics(labels, salesData) {
+
+const ctx = document.getElementById('growthChartEngine').getContext('2d');
+
+if (activeChart) activeChart.destroy();
+
+
+
+activeChart = new Chart(ctx, {
+
+type: 'line',
+
+data: {
+
+labels: labels,
+
+datasets: [{
+
+label: 'Turnover Volume (₹)',
+
+data: salesData,
+
+borderColor: '#f59e0b',
+
+backgroundColor: 'rgba(245, 158, 11, 0.04)',
+
+borderWidth: 2,
+
+fill: true,
+
+tension: 0.1,
+
+pointRadius: labels.length > 40 ? 0.5 : 1.5,
+
+pointHoverRadius: 4
+
+}]
+
+},
+
+options: {
+
+responsive: true,
+
+maintainAspectRatio: false,
+
+plugins: { legend: { display: false } },
+
+scales: {
+
+x: { grid: { color: '#374151' }, ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 } },
+
+y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } }
+
+}
+
+}
+
+});
+
+}
+
+
+
+function renderWeekdayDistributionChart(averagesData) {
+
+const ctx = document.getElementById('weekdayChartEngine').getContext('2d');
+
+if (activeWeekdayChart) activeWeekdayChart.destroy();
+
+
+
+activeWeekdayChart = new Chart(ctx, {
+
+type: 'bar',
+
+data: {
+
+labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+
+datasets: [{
+
+data: averagesData,
+
+backgroundColor: '#3b82f6',
+
+hoverBackgroundColor: '#f59e0b',
+
+borderRadius: 4
+
+}]
+
+},
+
+options: {
+
+responsive: true,
+
+maintainAspectRatio: false,
+
+plugins: { legend: { display: false } },
+
+scales: {
+
+x: { grid: { display: false }, ticks: { color: '#9ca3af' } },
+
+y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } }
+
+}
+
+}
+
+});
+
+}
+
+
+
+// Backup and Restore JSON Engines Block
+
+function exportBackupJSON() {
+
+if (!masterRuntimeCachedRecords.length) return alert("No active data to dump to database payload.");
+
+const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(masterRuntimeCachedRecords, null, 2));
+
+const downloadAnchor = document.createElement('a');
+
+downloadAnchor.setAttribute("href", dataStr);
+
+downloadAnchor.setAttribute("download", `Chai_Local_ColdBackup_${new Date().toISOString().slice(0,10)}.json`);
+
+document.body.appendChild(downloadAnchor);
+
+downloadAnchor.click();
+
+downloadAnchor.removeChild(downloadAnchor);
+
+}
+
+
+
+function importBackupJSON(event) {
+
+const file = event.target.files[0];
+
+if (!file) return;
+
+
+
+const reader = new FileReader();
+
+reader.onload = function(e) {
+
+try {
+
+const parsedArray = JSON.parse(e.target.result);
+
+if (!Array.isArray(parsedArray)) throw new Error("Format error: Root node configuration mismatch.");
+
+
+
+if (confirm(`Injecting ${parsedArray.length} database logs. This operation overwritten matching dates. Proceed?`)) {
+
+const tx = dbInstance.transaction(STORE_NAME, "readwrite");
+
+const store = tx.objectStore(STORE_NAME);
+
+parsedArray.forEach(item => {
+
+if(item.date && Object.prototype.hasOwnProperty.call(item, 'cash')) {
+
+store.put({ date: item.date, cash: parseFloat(item.cash)||0, online: parseFloat(item.online)||0 });
+
+}
+
+});
+
+tx.oncomplete = function() {
+
+alert("🏆 Database restored successfully!");
+
+fetchAndRefreshSystemData();
+
+};
+
+}
+
+} catch(err) {
+
+alert("⚠️ Failed parsing configuration mapping file structure. Ensure valid app backup files.");
+
+}
+
+};
+
+reader.readAsText(file);
+
+}
+
+
+
+function copyDataToClipboard() {
+
+if (!currentlyFilteredRecords.length) return alert("No metrics current range configuration to parse layout text.");
+
+let textFormat = "--- CHAI LOCAL OPERATIONS MATRIX LOG (FILTERED) ---\nDate | Cash Sales | Online Sales | Total Gross Turnover\n";
+
+[...currentlyFilteredRecords].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(r => {
+
+textFormat += `${r.date} | ₹${r.cash} | ₹${r.online} | ₹${r.cash + r.online}\n`;
+
+});
+
+navigator.clipboard.writeText(textFormat).then(() => {
+
+alert("✅ Filtered range parsed and copied to clipboard successfully!");
+
+});
+
+}
+
+
+
+function exportDataToCSV() {
+
+if (!currentlyFilteredRecords.length) return alert("No items currently filtered state to construct CSV files.");
+
+let csvContent = "data:text/csv;charset=utf-8,Date,Cash Sales,Online Sales,Total Gross\n";
+
+[...currentlyFilteredRecords].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(r => {
+
+csvContent += `${r.date},${r.cash},${r.online},${r.cash + r.online}\n`;
+
+});
+
+const encodedUri = encodeURI(csvContent);
+
+const link = document.createElement("a");
+
+link.setAttribute("href", encodedUri);
+
+link.setAttribute("download", "Chai_Local_Filtered_Ledger.csv");
+
+document.body.appendChild(link);
+
+link.click();
+
+document.body.removeChild(link);
+
+}
+
+</script>
+
+</body>
+
+</html>
