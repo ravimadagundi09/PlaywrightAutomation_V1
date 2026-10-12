@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx playwright test tests/*c --headed"
+    "test": "npx playwright test tests/*c --headed",
+    "test:regression":"npx playwright test --grep @regression --headed",
+    "test:api":"npx playwright test tests/API_Testing/* --grep @API"
+
   },
   "keywords": [],
   "author": "",

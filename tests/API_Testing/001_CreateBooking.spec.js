@@ -2,7 +2,7 @@ import {test , expect} from '@playwright/test'
 
 const BASE_URL="https://restful-booker.herokuapp.com";
 
-test("Create Booking with static data",async ({request})=>{
+test("Create Booking with static data @API",async ({request})=>{
 
     const  requestPayload={
     "firstname" : "Jim",

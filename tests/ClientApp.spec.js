@@ -2,7 +2,7 @@ const {test, expect} = require('@playwright/test');
 
 
 
-test('Lets shop ',async ({browser})=>
+test('Lets shop @regression',async ({browser})=>
 {  
 
     const context=await browser.newContext();

@@ -3,7 +3,7 @@ import fs from 'fs'
 
 const BASE_URL="https://restful-booker.herokuapp.com";
 
-test("Create Booking with Json File data",async ({request})=>{
+test("Create Booking with Json File data @API",async ({request})=>{
 
 // Reading Data from json
 
